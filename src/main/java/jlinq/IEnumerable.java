@@ -262,7 +262,8 @@ public interface IEnumerable<T> extends Iterable<T> {
 	}
 
 	public default <TKey> IEnumerable<Grouping<TKey, T>> groupBy(final Func1<T, TKey> selector) {
-		return groupBy(selector, (o1, o2) -> compare(o1, o2));
+		return (IEnumerable<Grouping<TKey, T>>) groupBy(selector, (t, e) -> new Grouping<TKey, T>(e, t),
+				(o1, o2) -> compare(o1, o2));
 	}
 
 	public default <TKey> IEnumerable<Grouping<TKey, T>> groupBy(final Func1<T, TKey> selector,
@@ -272,7 +273,8 @@ public interface IEnumerable<T> extends Iterable<T> {
 
 	public default <TKey, TElement> IEnumerable<Grouping<TKey, TElement>> groupBy(final Func1<T, TKey> keySelector,
 			final Func1<T, TElement> elementSelector) {
-		return groupBy(keySelector, elementSelector, (o1, o2) -> compare(o1, o2));
+		return groupBy(keySelector, (t, e) -> new Grouping<TKey, TElement>(e.select(o -> elementSelector.run(o)), t),
+				(o1, o2) -> compare(o1, o2));
 	}
 
 	public default <TKey, TElement> IEnumerable<Grouping<TKey, TElement>> groupBy(final Func1<T, TKey> keySelector,

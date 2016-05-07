@@ -1,5 +1,57 @@
 apply plugin: "java"
+apply plugin: "eclipse"
 
 sourceSets {
 	boot
+	installer
+}
+
+configurations {
+	eclipseCP {
+		dependencies {
+			compile "org.ow2.asm:asm:5.1"
+			compile "org.apache.logging.log4j:log4j-api:2.5"
+			compile "org.apache.logging.log4j:log4j-core:2.5"
+		}
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	bootCompile sourceSets.main.output
+	installerCompile "org.ow2.asm:asm:5.1"
+	installerCompile "org.apache.logging.log4j:log4j-api:2.5"
+	installerCompile "org.apache.logging.log4j:log4j-core:2.5"
+	installerCompile sourceSets.boot.output
+	installerCompile sourceSets.main.output
+	testCompile sourceSets.boot.output
+}
+
+eclipse {
+	classpath {
+		downloadSources = true
+		downloadJavadoc = true
+		plusConfigurations += configurations.eclipseCP
+	}
+}
+
+build {
+	dependsOn bootClasses
+	dependsOn installerClasses
+}
+
+task runInstaller(type: JavaExec) {
+	main = "com.github.zachdeibert.jlinq.installer.Main"
+	classpath sourceSets.installer.runtimeClasspath
+	// This could be fixed with LINQ
+	List<String> paths = new ArrayList<String>()
+	sourceSets.installer.runtimeClasspath.each {
+		paths.add(it.getAbsolutePath())
+	}
+	jvmArgs "-Xbootclasspath/p:" + String.join(File.pathSeparator, paths.toArray(new String[0]))
+	dependsOn bootClasses
+	dependsOn installerClasses
 }
