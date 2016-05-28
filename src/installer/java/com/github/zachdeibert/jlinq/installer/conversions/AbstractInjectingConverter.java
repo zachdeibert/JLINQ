@@ -12,10 +12,11 @@ import jlinq.IEnumerable;
 import jlinq.Jlinq;
 
 abstract class AbstractInjectingConverter implements IConverter {
-	public static IEnumerable<InjectableClass<?>> injections = Jlinq
-			.from(new InjectableClass<?>[] { new InjectableClass<InputStream>(new InputStreamConverter()),
-					new InjectableClass<Iterable<?>>(new IterableConverter()),
-					new InjectableClass<String>(new StringConverter()) });
+	@SuppressWarnings("rawtypes")
+	public static IEnumerable<InjectableClass<?>> injections = Jlinq.from(
+			new InjectableClass<?>[] { new InjectableClass<InputStream>(InputStream.class, new InputStreamConverter()),
+					new InjectableClass<Iterable>(Iterable.class, new IterableConverter()),
+					new InjectableClass<String>(String.class, new StringConverter()) });
 	public static IEnumerable<String> classes = injections.select(c -> getClassname(c));
 
 	private static String getClassname(final InjectableClass<?> cls) {

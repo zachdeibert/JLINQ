@@ -14,13 +14,8 @@ public class InjectableClass<T> {
 		return cls;
 	}
 
-	@SuppressWarnings("unchecked")
-	public InjectableClass(final AbstractClassConverter converter) {
+	public InjectableClass(final Class<T> cls, final AbstractClassConverter converter) {
 		this.converter = converter;
-		try {
-			this.cls = (Class<? extends T>) Class.forName(getClass().getTypeParameters()[0].getBounds()[0].getTypeName());
-		} catch ( final ClassNotFoundException ex ) {
-			throw new RuntimeException(ex);
-		}
+		this.cls = cls;
 	}
 }
