@@ -86,6 +86,17 @@ task runPatchMaker(type: JavaExec) {
 	dependsOn patchMakerClasses
 }
 
+task jarSrc(type: Jar) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+task jarDoc(type: Jar) {
+	classifier = "javadoc"
+	from javadoc.destinationDir
+	dependsOn javadoc
+}
+
 publishing {
 	repositories {
 		maven {
