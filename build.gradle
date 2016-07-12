@@ -1,9 +1,13 @@
 apply plugin: "java"
 apply plugin: "eclipse"
+apply plugin: "maven-publish"
+
+def publishVersion = "1.0.0-SNAPSHOT"
 
 sourceSets {
 	boot
 	installer
+	patchMaker
 }
 
 configurations {
@@ -12,12 +16,18 @@ configurations {
 			compile "org.ow2.asm:asm:5.1"
 			compile "org.apache.logging.log4j:log4j-api:2.5"
 			compile "org.apache.logging.log4j:log4j-core:2.5"
+			compile "org.clojars.razum2um:jd-core-java:1.2"
+			compile "com.fifesoft:rsyntaxtextarea:2.5.8"
+			compile "org.reflections:reflections:0.9.10"
 		}
 	}
 }
 
 repositories {
 	mavenCentral()
+	maven {
+		url "https://clojars.org/repo/"
+	}
 }
 
 dependencies {
@@ -27,6 +37,12 @@ dependencies {
 	installerCompile "org.apache.logging.log4j:log4j-core:2.5"
 	installerCompile sourceSets.boot.output
 	installerCompile sourceSets.main.output
+	patchMakerCompile "org.ow2.asm:asm:5.1"
+	patchMakerCompile "org.clojars.razum2um:jd-core-java:1.2"
+	patchMakerCompile "com.fifesoft:rsyntaxtextarea:2.5.8"
+	patchMakerCompile "org.reflections:reflections:0.9.10"
+	patchMakerCompile sourceSets.boot.output
+	patchMakerCompile sourceSets.main.output
 	testCompile sourceSets.boot.output
 }
 
@@ -41,6 +57,7 @@ eclipse {
 build {
 	dependsOn bootClasses
 	dependsOn installerClasses
+	dependsOn patchMakerClasses
 }
 
 task runInstaller(type: JavaExec) {
@@ -48,10 +65,52 @@ task runInstaller(type: JavaExec) {
 	classpath sourceSets.installer.runtimeClasspath
 	// This could be fixed with LINQ
 	List<String> paths = new ArrayList<String>()
-	sourceSets.installer.runtimeClasspath.each {
+	sourceSets.boot.runtimeClasspath.each {
 		paths.add(it.getAbsolutePath())
 	}
 	jvmArgs "-Xbootclasspath/p:" + String.join(File.pathSeparator, paths.toArray(new String[0]))
 	dependsOn bootClasses
 	dependsOn installerClasses
+}
+
+task runPatchMaker(type: JavaExec) {
+	main = "com.github.zachdeibert.jlinq.patchMaker.Main"
+	classpath sourceSets.patchMaker.runtimeClasspath
+	// This could be fixed with LINQ
+	List<String> paths = new ArrayList<String>()
+	sourceSets.boot.runtimeClasspath.each {
+		paths.add(it.getAbsolutePath())
+	}
+	jvmArgs "-Xbootclasspath/p:" + String.join(File.pathSeparator, paths.toArray(new String[0]))
+	dependsOn bootClasses
+	dependsOn patchMakerClasses
+}
+
+publishing {
+	repositories {
+		maven {
+			url "build/maven"
+		}
+	}
+	
+	publications {
+		main(MavenPublication) {
+			from components.java
+			groupId "com.github.zachdeibert"
+			artifactId "JLINQ"
+			version publishVersion
+		}
+		src(MavenPublication) {
+			artifact jarSrc
+			groupId "com.github.zachdeibert"
+			artifactId "JLINQ"
+			version publishVersion
+		}
+		javadoc(MavenPublication) {
+			artifact jarDoc
+			groupId "com.github.zachdeibert"
+			artifactId "JLINQ"
+			version publishVersion
+		}
+	}
 }
